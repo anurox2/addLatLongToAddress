@@ -2,7 +2,7 @@ from django.shortcuts import render
 # from uploader.models import UploadForm,Upload
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-import csv
+import csv, json
 import codecs
 import pandas as pd
 import requests
@@ -62,9 +62,23 @@ def home(request):
         logger.info("Geocoding finished for this file")
 
         #------------Write data back to file
-        pd.DataFrame(results).to_csv(data, encoding='utf-8')
+        # pd.DataFrame(results).to_csv(data, encoding='utf-8')
+
+        #------------------
+        header ="formatted_address,input_string,latitude,longitude,number_of_hits_on_address,status"
+        with open("geoCoded.csv", "w", newline="") as var:
+            header = header.split(",")
+            write = csv.DictWriter(var, header, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            write.writeheader()
+            write.writerows(results)
+
+
+
     return render(request,'home.html')
     # return render(request,'home.html',{'form':file,'files':files})
+
+#formatted_address,input_string,latitude,longitude, number_of_hits_on_address, status
+
 
 def hitGoogleAPI(address, api_key, return_full_response=False):
     geocode_url = "https://maps.googleapis.com/maps/api/geocode/json?address={}&key={}".format(address,api_key)
