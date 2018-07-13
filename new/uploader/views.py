@@ -17,7 +17,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 
 #----------Configuration
-API_KEY="YOUR_API_KEY_HERE" 
+API_KEY="YOUR_API_KEY_HERE"
 BACKOFF_TIME=30
 col_name="Address"
 RETURN_FULL_RESULTS = False
@@ -44,7 +44,7 @@ def home(request):
                     geocodeResult = hitGoogleAPI(address, API_KEY, return_full_response=RETURN_FULL_RESULTS)
                 except Exception as e:
                     logger.exception(e)
-                    logger.error("Skipping. Error returned {}".format(address))
+                    logger.error("Skipping this address. Error returned {}".format(address))
                     geocodedFlag = True
 
                 if geocodeResult['status'] == 'OVER_QUERY_LIMIT': #-------------Check if API limit reached
