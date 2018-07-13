@@ -17,7 +17,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 
 #----------Configuration
-API_KEY="AIzaSyD3EnJr-RUzf5dpjtNMEtL7x0wKY_gwatg"
+API_KEY="YOUR_API_KEY_HERE"
 BACKOFF_TIME=30
 col_name="Address"
 RETURN_FULL_RESULTS = False
