@@ -44,7 +44,7 @@ def home(request):
                     geocodeResult = hitGoogleAPI(address, API_KEY, return_full_response=RETURN_FULL_RESULTS)
                 except Exception as e:
                     logger.exception(e)
-                    logger.error("Skipping this address. Error returned {}".format(address))
+                    logger.error("Skipping this address. Exception found {}".format(address))
                     geocodedFlag = True
 
                 if geocodeResult['status'] == 'OVER_QUERY_LIMIT': #-------------Check if API limit reached
