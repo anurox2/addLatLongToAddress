@@ -3,12 +3,14 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 import csv, json
+import os
 import codecs
 import pandas as pd
 import requests
 import logging
 import time
 
+#----------Logging Configuration
 logger = logging.getLogger("root")
 logger.setLevel(logging.DEBUG)
 # create console handler
@@ -17,10 +19,12 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 
 #----------Configuration
-API_KEY="YOUR_API_KEY_HERE"
+API_KEY="AIzaSyD3EnJr-RUzf5dpjtNMEtL7x0wKY_gwatg"
 BACKOFF_TIME=30
 col_name="Address"
 RETURN_FULL_RESULTS = False
+output_filedir = os.path.abspath(os.getcwd())+"/media/files"
+output_filepath = output_filedir+"/geoCoded.csv"
 # Create your views here.
 def home(request):
     if request.POST and request.FILES:
@@ -33,7 +37,7 @@ def home(request):
         #-----------------Generate address list
         address_list = data[col_name].tolist()
 
-        #----------------loop to process address_list
+        #----------------Loop to process address_list
         results = []
         for address in address_list:
             geocodedFlag = False     #flag to ensure an address is run only once through the while loop
@@ -47,37 +51,38 @@ def home(request):
                     logger.error("Skipping this address. Exception found {}".format(address))
                     geocodedFlag = True
 
-                if geocodeResult['status'] == 'OVER_QUERY_LIMIT': #-------------Check if API limit reached
+                if geocodeResult['Status'] == 'OVER_QUERY_LIMIT': #------------------Check if API limit reached
                     logger.info("Query limit hit! Pausing the geocoding process.")
-                    time.sleep(BACKOFF_TIME * 60) #--------program paused for 30 minutes
+                    time.sleep(BACKOFF_TIME * 60) #----------------------------------Program paused for 30 minutes
                     geocodedFlag = True
-                else: #-----------------API limit not reached, continue processing
-                    if geocodeResult['status']!='OK':
-                        logger.warning("Error returned in geocoding {}: {}".format(address, geocodeResult['status']))
+                else: #--------------------------------------------------------------API limit not reached, continue processing
+                    if geocodeResult['Status']!='OK':
+                        logger.warning("Error returned in geocoding {}: {}".format(address, geocodeResult['Status']))
                     else:
-                        logger.debug("Address geocoded successfully: {}: {}".format(address, geocodeResult['status']))
+                        logger.debug("Address geocoded successfully: {}: {}".format(address, geocodeResult['Status']))
                     results.append(geocodeResult)
                     geocodedFlag=True
 
         logger.info("Geocoding finished for this file")
 
-        #------------Write data back to file
-        # pd.DataFrame(results).to_csv(data, encoding='utf-8')
 
-        #------------------
-        header ="formatted_address,input_string,latitude,longitude,number_of_hits_on_address,status"
-        with open("geoCoded.csv", "w", newline="") as var:
-            header = header.split(",")
-            write = csv.DictWriter(var, header, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            write.writeheader()
-            write.writerows(results)
+        #------------------Checking if the output directory is present
+        if (os.path.isdir(output_filedir)):
+            logging.info("Output directory present. Presenting file for download.")
+            pd.DataFrame(results).to_csv(output_filepath, encoding='utf-8')
+            return render(request, 'home.html',{'download':"/media/files/geoCoded.csv", 'file_name':"geoCodedAddresses.csv", 'label':"Here's the Geo Coded file: "})
+        else:#-------------Directory not present. Create new and then write the file to location
+            try:
+                os.makedirs(output_filedir)
+            except OSError:
+                logging.info("Directory creation failed. Exiting program")
+                return render(request, 'home.html',{'error_msg':"Output directory creation failed"})
+            else:
+                logging.info("Output directory created or is already present. Presenting file for download")
+                pd.DataFrame(results).to_csv(output_filepath, encoding='utf-8')
+                return render(request, 'home.html',{'download':"/media/files/geoCoded.csv",'file_name':"geoCodedAddresses.csv", 'label':"Here's the Geo Coded file: "})
 
-
-
-    return render(request,'home.html')
-    # return render(request,'home.html',{'form':file,'files':files})
-
-#formatted_address,input_string,latitude,longitude, number_of_hits_on_address, status
+    return render(request, 'home.html',{'error_msg':"GeoCoding failed!!"})
 
 
 def hitGoogleAPI(address, api_key, return_full_response=False):
@@ -91,19 +96,19 @@ def hitGoogleAPI(address, api_key, return_full_response=False):
     #Check if the result list is empty
     if len(results['results']) == 0:
         output = {
-            "formatted_address" : None,
-            "latitude": None,
-            "longitude": None
+            "Actual_Address" : None,
+            "Latitude": None,
+            "Longitude": None
         }
     else:
         answer = results['results'][0]
         output = {
-            "formatted_address" : answer.get('formatted_address'),
-            "latitude": answer.get('geometry').get('location').get('lat'),
-            "longitude": answer.get('geometry').get('location').get('lng')
+            "Actual_Address" : answer.get('formatted_address'),
+            "Latitude": answer.get('geometry').get('location').get('lat'),
+            "Longitude": answer.get('geometry').get('location').get('lng')
         }
 
-    output['input_string'] = address
-    output['number_of_hits_on_address'] = len(results['results'])
-    output['status'] = results.get('status')
+    output['Address'] = address
+    output['Number_Hits_On_Address'] = len(results['results'])
+    output['Status'] = results.get('status')
     return output

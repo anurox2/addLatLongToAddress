@@ -3,18 +3,25 @@
   <head>
     <meta charset="utf-8">
     <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
   </head>
   <body>
-    <div style="padding:40px;margin:40px;border:1px solid #ccc">
-      <h1>Files</h1>
-      <form action="#" method="post" enctype="multipart/form-data">
-          {% csrf_token %} {{form}}
-          <input type="file" name="csv_file"/>
-          <input type="submit" value="Upload" />
-
-          <!-- <input type="submit" value="Upload" name="csv_file"id="csv_file" /> -->
-      </form>
-
+    <div class="container">
+      <div class="jumbotron">
+        <p><h1>Welcome to an Address GeoCoding application</h1></p>
+        <p><h6>Upload a file below and just click "Start"</h6></p>
+        <form action="#" method="post" enctype="multipart/form-data" class="">
+          <div class="form-group">
+            {% csrf_token %} {{form}}
+            <div class="jumbotron" style="border: 1px solid black;">
+              <p><input type="file" name="csv_file"></p>
+              <p><input type="submit" class="btn btn-primary"/ value="Start GeoCoding"></p>
+            </div>
+          </div>
+        </form>
+        <hr>
+        {{label}}<a href="{{MEDIA_URL}}{{download}}" download>{{file_name}}</a>
+      </div>
     </div>
   </body>
 </html>
